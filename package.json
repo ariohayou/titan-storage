@@ -1,0 +1,75 @@
+{
+  "name": "logisly",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "capacitor:build": "vue-cli-service capacitor:build",
+    "capacitor:serve": "vue-cli-service capacitor:serve"
+  },
+  "dependencies": {
+    "@capacitor/android": "^2.0.0",
+    "@capacitor/cli": "^2.0.0",
+    "@capacitor/core": "^2.0.0",
+    "axios": "^0.24.0",
+    "cordova": "^12.0.0",
+    "core-js": "^3.6.5",
+    "es6-promise": "^4.2.8",
+    "file-saver": "^2.0.5",
+    "firebase": "8.3.2",
+    "jwt-decode": "^3.1.2",
+    "leaflet": "^1.9.4",
+    "middleware": "^1.0.0",
+    "sweetalert2": "^11.7.16",
+    "vue": "^2.6.11",
+    "vue-meta": "^2.4.0",
+    "vue-nice-scrollbar": "^2.0.1",
+    "vue-router": "^3.2.0",
+    "vue-xlsx": "^0.2.1",
+    "vuetify": "^2.4.0",
+    "vuex": "^3.6.2",
+    "xlsx": "^0.14.1"
+  },
+  "devDependencies": {
+    "@nklayman/vue-cli-plugin-capacitor": "~0.4.0",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-vue": "^6.2.2",
+    "prettier": "^2.2.1",
+    "sass": "~1.32.0",
+    "sass-loader": "^10.0.0",
+    "vue-cli-plugin-vuetify": "~2.4.3",
+    "vue-template-compiler": "^2.6.11",
+    "vue-toast-notification": "^0.6.3",
+    "vuetify-loader": "^1.7.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {
+      "no-unused-vars": "off"
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

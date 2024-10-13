@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Aturan akses untuk koleksi "registrations"
+    match /registrations/{document=**} {
+      allow read, create, update, delete: if request.auth != null;
+    }
+
+    // Aturan akses untuk koleksi "cutis"
+    match /cutis/{cutiId} {
+      allow read, write: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    
+    // Aturan akses untuk histori cuti        
+    match /historycuti/{history} {
+      allow read, write: if true;
+    }
+
+
+    // Aturan akses untuk koleksi "check-ins"
+    match /check-ins/{checkInId} {
+      allow read, write: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Aturan akses untuk koleksi "check-outs"
+    match /check-outs/{checkOutId} {
+      allow read, write: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Aturan akses untuk koleksi "karyawans"
+    match /registrations/{documentId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Tidak diperbolehkan menulis ke koleksi "registrations"
+    }
+    
+    // Aturan akses untuk koleksi "users"
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Aturan akses untuk koleksi "roles"
+    match /roles/{roleId} {
+      allow read: if request.auth != null;
+    }
+
+  }
+}

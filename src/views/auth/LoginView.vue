@@ -4,9 +4,9 @@
       <v-col cols="12" sm="8" md="6" lg="4">
         <v-card class="elevation-12 login-card">
           <v-card-title class="text-center">
-            <img src="/logisly.png" alt="Logo" class="logo-large" />
+            <img src="/Titan.png" alt="Logo" class="logo-large" />
           </v-card-title>
-          <v-card-subtitle class="text-center subtitle-1 mb-4">Sign In to Your Account</v-card-subtitle>
+          <v-card-subtitle class="text-center subtitle-1 mb-4">TITAN STORAGE</v-card-subtitle>
           <v-card-text>
             <v-form ref="form" v-model="valid" lazy-validation>
               <v-text-field

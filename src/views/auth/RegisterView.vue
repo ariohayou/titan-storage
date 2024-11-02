@@ -1,18 +1,18 @@
 <template>
   <v-container fluid>
-    <v-app-bar app class="white">
-      <v-card-title class="headline">
-        <v-btn icon @click="goBack">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <img src="/logisly.png" alt="Logo" class="logo-small">
-      </v-card-title>
-      <v-spacer></v-spacer>
-    </v-app-bar>
+    <v-app-bar app color="primary" dark>
+  <v-app-bar-nav-icon @click="goBack">
+    <v-icon>mdi-arrow-left</v-icon>
+  </v-app-bar-nav-icon>
+  <img src="/Titan.png" alt="Logo" class="logo-small mx-auto">
+  <v-card-title> REGISTER </v-card-title>
+  <v-spacer></v-spacer>
+</v-app-bar>
+
     <v-row justify="center">
       <v-col cols="12" sm="8" md="6" lg="4">
         <v-card class="register-card">
-          <v-card-title class="headline">Register</v-card-title>
+          <v-card-subtitle class="text-center mb-4">Daftarkan akun untuk mengakses sistem.</v-card-subtitle>
           <v-card-text>
             <v-form @submit.prevent="register">
               <v-container>

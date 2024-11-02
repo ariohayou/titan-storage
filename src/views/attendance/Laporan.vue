@@ -1,14 +1,16 @@
 <template>
   <v-container class="mb-5">
     <v-app-bar app color="primary" dark>
+      <v-btn icon @click="goHome">
+        <v-icon>mdi-arrow-left</v-icon>
+      </v-btn>
       <v-toolbar-title>Report</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn color="orange" dark @click="goHome">Back to Home</v-btn>
-      <v-btn color="green" dark @click="exportToExcel">Export to Excel</v-btn>
     </v-app-bar>
 
     <v-row class="mt-5" justify="center">
       <v-col cols="12" sm="10" md="8">
+        <v-btn color="green" dark class="mb-3" @click="exportToExcel">Export to Excel</v-btn>
         <v-card class="pa-5" color="#e0e0e0" outlined>
           <v-data-table :headers="tableHeaders" :items="productItems" item-key="id" class="elevation-1">
             <template v-slot:[`item.timestamp`]="{ item }">
@@ -32,7 +34,8 @@ export default {
     return {
       productItems: [],
       tableHeaders: [
-        { text: "Timestamp", value: "timestamp" },
+        { text: "Time", value: "timestamp" },
+        { text: "Action", value: "action" },
         { text: "Product Name", value: "itemName" },
         { text: "Category", value: "category" },
         { text: "In", value: "in" },
@@ -43,11 +46,12 @@ export default {
     };
   },
   created() {
-    this.fetchProducts();
+    this.fetchTransactions();
   },
   methods: {
-    async fetchProducts() {
-      const snapshot = await firebase.firestore().collection("products").orderBy("timestamp", "desc").get();
+    async fetchTransactions() {
+      // Mengambil data dari koleksi `transactions` dan mengurutkan berdasarkan timestamp
+      const snapshot = await firebase.firestore().collection("transactions").orderBy("timestamp", "desc").get();
       this.productItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     formatTimestamp(timestamp) {
@@ -62,7 +66,8 @@ export default {
     exportToExcel() {
       // Data yang akan diekspor
       const exportData = this.productItems.map(item => ({
-        Timestamp: this.formatTimestamp(item.timestamp),
+        Time: this.formatTimestamp(item.timestamp),
+        Action: item.action,
         "Product Name": item.itemName,
         Category: item.category,
         In: item.in,

@@ -3,7 +3,7 @@
     <v-app-bar app color="primary" dark>
       <v-toolbar-title>LIVE STOCK</v-toolbar-title>
       <v-spacer></v-spacer>
-      <span>Selamat Datang, Admin</span>
+      <span>Selamat Datang, {{ displayName }}</span>
       <v-btn class="ml-4" color="orange" dark @click="logout">Log Out</v-btn>
     </v-app-bar>
 
@@ -46,9 +46,9 @@
             <v-text-field v-model.number="newProduct.stock" label="Initial Stock" outlined type="number"
               :rules="[v => !!v || 'Initial stock is required']"></v-text-field>
             <v-text-field v-if="isEditing" v-model.number="newProduct.in" label="In (Jumlah Masuk)" outlined
-              type="number" :rules="[v => !!v || 'In is required']"></v-text-field>
+              type="number"></v-text-field>
             <v-text-field v-if="isEditing" v-model.number="newProduct.out" label="Out (Jumlah Keluar)" outlined
-              type="number" :rules="[v => !!v || 'Out is required']"></v-text-field>
+              type="number"></v-text-field>
             <v-select v-model="newProduct.type" :items="typeOptions" label="Type" outlined
               :rules="[v => !!v || 'Type is required']"></v-select>
           </v-form>
@@ -66,12 +66,14 @@
 <script>
 import firebase from "firebase/app";
 import "firebase/firestore";
+import "firebase/auth";
 import Swal from "sweetalert2";
 
 export default {
   name: "Home",
   data() {
     return {
+      displayName: "", // Variabel untuk menyimpan nama pengguna yang login
       addProductDialog: false,
       valid: false,
       isEditing: false,
@@ -81,8 +83,8 @@ export default {
         category: '',
         price: null,
         stock: 0,
-        in: 0, // Jumlah masuk baru
-        out: 0, // Jumlah keluar baru
+        in: 0,
+        out: 0,
         type: '',
         timestamp: null,
       },
@@ -91,8 +93,8 @@ export default {
         { text: 'Produk', value: 'itemName' },
         { text: 'Category', value: 'category' },
         { text: 'Price', value: 'price' },
-        { text: 'In', value: 'in' }, // Kolom In
-        { text: 'Out', value: 'out' }, // Kolom Out
+        { text: 'In', value: 'in' },
+        { text: 'Out', value: 'out' },
         { text: 'Stock', value: 'stock' },
         { text: 'Type', value: 'type' },
         { text: 'Actions', value: 'actions', sortable: false }
@@ -102,8 +104,25 @@ export default {
   },
   created() {
     this.fetchProducts();
+    this.getDisplayName(); // Memanggil fungsi untuk mendapatkan displayName
   },
   methods: {
+    async getDisplayName() {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        // Mengambil dokumen pengguna dari Firestore berdasarkan email
+        const userDoc = await firebase.firestore().collection("registrations")
+          .where("email", "==", user.email)
+          .limit(1)
+          .get();
+
+        if (!userDoc.empty) {
+          this.displayName = userDoc.docs[0].data().displayName;
+        } else {
+          this.displayName = "User";
+        }
+      }
+    },
     async fetchProducts() {
       const snapshot = await firebase.firestore().collection("products").get();
       this.tableItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -118,68 +137,89 @@ export default {
       this.resetForm();
     },
     async saveProduct() {
-  if (this.$refs.form.validate()) {
-    try {
-      const timestamp = firebase.firestore.FieldValue.serverTimestamp(); // Gunakan serverTimestamp untuk Firestore
+      if (this.$refs.form.validate()) {
+        try {
+          const timestamp = firebase.firestore.FieldValue.serverTimestamp();
 
-      if (this.isEditing) {
-        // Ambil data produk lama dari Firebase
-        const docRef = firebase.firestore().collection("products").doc(this.newProduct.id);
-        const doc = await docRef.get();
-        const oldData = doc.data();
+          // Tetapkan nilai default 0 untuk `in` dan `out` jika kosong atau tidak diisi
+          this.newProduct.in = this.newProduct.in || 0;
+          this.newProduct.out = this.newProduct.out || 0;
 
-        // Hitung perubahan in dan out
-        const inDifference = this.newProduct.in - oldData.in;
-        const outDifference = this.newProduct.out - oldData.out;
+          if (this.isEditing) {
+            const docRef = firebase.firestore().collection("products").doc(this.newProduct.id);
+            const doc = await docRef.get();
+            const oldData = doc.data();
 
-        // Perhitungan stok baru berdasarkan perubahan in dan out
-        const newStock = oldData.stock + inDifference - outDifference;
+            const inDifference = this.newProduct.in - (oldData.in || 0);
+            const outDifference = this.newProduct.out - (oldData.out || 0);
+            const newStock = (oldData.stock || 0) + inDifference - outDifference;
 
-        // Validasi stok tidak boleh negatif
-        if (newStock < 0) {
-          Swal.fire("Error!", "Stock cannot be negative.", "error");
-          return;
+            if (newStock < 0) {
+              Swal.fire("Error!", "Stock cannot be negative.", "error");
+              return;
+            }
+
+            await docRef.update({
+              itemName: this.newProduct.itemName,
+              category: this.newProduct.category,
+              price: this.newProduct.price,
+              stock: newStock,
+              in: this.newProduct.in,
+              out: this.newProduct.out,
+              type: this.newProduct.type,
+              timestamp: timestamp,
+            });
+
+            await firebase.firestore().collection("transactions").add({
+              action: "update",
+              itemName: this.newProduct.itemName,
+              category: this.newProduct.category,
+              in: inDifference,
+              out: outDifference,
+              stock: newStock,
+              type: this.newProduct.type,
+              timestamp: timestamp,
+            });
+
+            Swal.fire("Updated!", "Product updated successfully.", "success");
+
+          } else {
+            const docRef = await firebase.firestore().collection("products").add({
+              itemName: this.newProduct.itemName,
+              category: this.newProduct.category,
+              price: this.newProduct.price,
+              stock: this.newProduct.stock,
+              in: this.newProduct.in,
+              out: this.newProduct.out,
+              type: this.newProduct.type,
+              timestamp: timestamp,
+            });
+
+            await firebase.firestore().collection("transactions").add({
+              action: "add",
+              itemName: this.newProduct.itemName,
+              category: this.newProduct.category,
+              in: this.newProduct.in,
+              out: this.newProduct.out,
+              stock: this.newProduct.stock,
+              type: this.newProduct.type,
+              timestamp: timestamp,
+            });
+
+            this.newProduct.id = docRef.id;
+            Swal.fire("Saved!", "Product added successfully.", "success");
+          }
+
+          this.closeAddProductDialog();
+          this.fetchProducts();
+        } catch (error) {
+          Swal.fire("Error!", "Failed to save product.", "error");
+          console.error("Error saving product:", error);
         }
-
-        // Update data di Firestore
-        await docRef.update({
-          itemName: this.newProduct.itemName,
-          category: this.newProduct.category,
-          price: this.newProduct.price,
-          stock: newStock,
-          in: this.newProduct.in,
-          out: this.newProduct.out,
-          type: this.newProduct.type,
-          timestamp: timestamp // Menggunakan serverTimestamp untuk update
-        });
-        Swal.fire("Updated!", "Product updated successfully.", "success");
       } else {
-        // Tambah produk baru ke Firebase
-        const docRef = await firebase.firestore().collection("products").add({
-          itemName: this.newProduct.itemName,
-          category: this.newProduct.category,
-          price: this.newProduct.price,
-          stock: this.newProduct.stock,
-          in: this.newProduct.in,
-          out: this.newProduct.out,
-          type: this.newProduct.type,
-          timestamp: timestamp // Menggunakan serverTimestamp untuk penyimpanan
-        });
-        this.newProduct.id = docRef.id;
-        Swal.fire("Saved!", "Product added successfully.", "success");
+        Swal.fire("Error!", "Please fill all required fields.", "error");
       }
-      this.closeAddProductDialog();
-      this.fetchProducts();
-    } catch (error) {
-      Swal.fire("Error!", "Failed to save product.", "error");
-      console.error("Error saving product:", error);
-    }
-  } else {
-    Swal.fire("Error!", "Please fill all required fields.", "error");
-  }
-}
-
-    ,
+    },
     deleteProduct(item) {
       Swal.fire({
         title: "Are you sure?",
@@ -234,13 +274,15 @@ export default {
         cancelButtonText: "Batal"
       }).then(result => {
         if (result.isConfirmed) {
-          localStorage.clear();
-          this.$router.push("/login");
+          firebase.auth().signOut().then(() => {
+            localStorage.clear();
+            this.$router.push("/login");
+          });
         }
       });
     }
   }
-}
+};
 </script>
 
 <style scoped>

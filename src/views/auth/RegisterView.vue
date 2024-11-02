@@ -235,7 +235,7 @@ export default {
 
     cancel() {
       this.resetForm();
-      this.$router.push("/dashboard");
+      this.$router.push("/home");
     },
   },
 };

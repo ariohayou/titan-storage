@@ -1,27 +1,51 @@
 <template>
-  <div>
-    <v-form name="login-form">
-      <v-container>
-        <v-row align="center" justify="center">
-          <v-col lg="6" md="6" sm="6">
-            <v-card>
-              <v-card-title class="headline">
-                <img src="/logisly.png" alt="Logo" class="logo-small">
-              </v-card-title>
-              <v-card-subtitle class="title text-center">Login</v-card-subtitle>
-              <v-card-text>
-                <v-text-field v-model="input.username" label="E-mail" outlined></v-text-field>
-                <v-text-field v-model="input.password" label="Password" type="password" outlined></v-text-field>
-                <v-row justify="center">
-                  <v-btn class="mx-2 button-login" color="green" dark @click.prevent="login">Login</v-btn>
-                </v-row>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-form>
-  </div>
+  <v-container fluid class="login-container">
+    <v-row align="center" justify="center" class="fill-height">
+      <v-col cols="12" sm="8" md="6" lg="4">
+        <v-card class="elevation-12 login-card">
+          <v-card-title class="text-center">
+            <img src="/logisly.png" alt="Logo" class="logo-large" />
+          </v-card-title>
+          <v-card-subtitle class="text-center subtitle-1 mb-4">Sign In to Your Account</v-card-subtitle>
+          <v-card-text>
+            <v-form ref="form" v-model="valid" lazy-validation>
+              <v-text-field
+                v-model="input.username"
+                label="Email"
+                outlined
+                :rules="[v => !!v || 'Email is required']"
+                prepend-icon="mdi-email"
+                type="email"
+              ></v-text-field>
+              <v-text-field
+                v-model="input.password"
+                label="Password"
+                outlined
+                :rules="[v => !!v || 'Password is required']"
+                prepend-icon="mdi-lock"
+                type="password"
+              ></v-text-field>
+              <v-row justify="center" class="mt-3">
+                <v-btn
+                  :loading="loading"
+                  color="primary"
+                  dark
+                  block
+                  class="button-login"
+                  @click.prevent="login"
+                >
+                  <v-icon left>mdi-login</v-icon>
+                  Login
+                </v-btn>
+              </v-row>
+              <v-row justify="center" class="mt-2">
+              </v-row>
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -38,25 +62,25 @@ export default {
         username: '',
         password: '',
       },
+      loading: false,
+      valid: true,
     };
   },
   methods: {
     ...mapMutations(['setUserRole']),
     login() {
-      // Pastikan username DAN password tidak kosong
-      if (this.input.username !== '' && this.input.password !== '') {
-        console.log('authenticated');
+      if (this.$refs.form.validate()) {
+        this.loading = true;
         firebase
           .auth()
           .signInWithEmailAndPassword(this.input.username, this.input.password)
           .then((data) => {
-            console.log('Successfully logged in!', data);
-            this.showHomePage(); // Menampilkan halaman Home
-            this.setRole(); // Set peran pengguna setelah login berhasil
+            this.loading = false;
+            this.showHomePage(); 
+            this.setRole(); 
           })
           .catch((error) => {
-            console.log(error.code);
-            // Tampilkan pesan error menggunakan SweetAlert2
+            this.loading = false;
             swal.fire({
               title: 'Login Error',
               text: 'Invalid email or password',
@@ -65,36 +89,35 @@ export default {
             });
           });
       } else {
-        console.log('Username and Password cannot be empty');
+        swal.fire({
+          title: 'Error',
+          text: 'Please fill in all required fields',
+          icon: 'warning',
+          confirmButtonText: 'OK',
+        });
       }
     },
     showHomePage() {
-      // Menggunakan SweetAlert2 untuk menampilkan pesan sukses
       swal
         .fire({
           title: 'Login Success',
           icon: 'success',
-          timer: 10000,
+          timer: 1000,
           showConfirmButton: false,
         })
         .then(() => {
-          // Routing ke halaman HomeView.vue
           this.$router.push('/home');
         });
     },
     setRole() {
-      console.log("masuk setRole")
       const user = firebase.auth().currentUser;
       if (user) {
-        console.log(user.email)
         db.collection("registrations")
           .where("email", "==", user.email)
           .get()
           .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
-              // Access the document data
               const data = doc.data();
-              console.log(data);
               localStorage.setItem("role", data.jabatan)
             });
           })
@@ -103,27 +126,45 @@ export default {
           });
       }
     },
+    navigateToRegister() {
+      this.$router.push('/register');
+    }
   },
 };
 </script>
 
-<style>
-.logo-small {
-  width: 100px;
-  height: 100px;
+<style scoped>
+.login-container {
+  background-color: #f5f5f5;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #ffffff;
+}
+
+.logo-large {
+  width: 80px;
+  height: 80px;
   display: block;
   margin: 0 auto;
 }
 
-.register-link {
-  color: blue;
-  text-decoration: underline;
-  text-align: center;
-  display: block;
-  margin-top: 40px;
+.subtitle-1 {
+  font-size: 20px;
+  color: #4a4a4a;
 }
 
 .button-login {
-  margin-top: 20px;
+  width: 100%;
+}
+
+.v-btn--text .v-btn__content {
+  color: #1976d2 !important;
 }
 </style>

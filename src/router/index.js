@@ -7,6 +7,7 @@ import Register from "@/views/auth/RegisterView.vue";
 import ListKaryawan from "@/views/listdashboard/ListKaryawanView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
 import Laporan from "../views/attendance/Laporan.vue";
+import ProductList from "../views/attendance/ProductList.vue";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -36,6 +37,10 @@ const routes = [
       {
         path: "/register",
         component: Register
+      },
+      {
+        path: "/product-list",
+        component: ProductList
       },
       {
         path: "/home",
